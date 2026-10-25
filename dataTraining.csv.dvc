@@ -1,0 +1,5 @@
+outs:
+- md5: f8839181ad59b9f9f272f679e1bbafa1
+  size: 6427328
+  hash: md5
+  path: dataTraining.csv
