@@ -1,2 +1,5 @@
 /dataTraining.csv
 /dataTesting.csv
+*.npy
+*.keras
+.ipynb_checkpoints/
