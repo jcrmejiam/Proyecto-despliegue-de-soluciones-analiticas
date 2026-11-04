@@ -87,3 +87,28 @@ X_train_embedding = np.load("X_train_embedding.npy")
 X_test_embedding = np.load("X_test_embedding.npy")
 
 modelo3_red = load_model("modelo_rating_bert.keras")
+
+# Modelo 3: Red neuronal con embeddings de BERT
+from tensorflow.keras.models import load_model
+
+with mlflow.start_run(run_name="Red_neuronal_BERT"):
+
+    modelo3_red = load_model("modelo_rating_bert.keras")
+
+    y_pred3 = modelo3_red.predict(X_test_embedding).flatten()
+
+    mae3 = mean_absolute_error(y_test, y_pred3)
+    rmse3 = np.sqrt(mean_squared_error(y_test, y_pred3))
+    r23 = r2_score(y_test, y_pred3)
+
+    print("mae:", round(mae3, 4))
+    print("rmse:", round(rmse3, 4))
+    print("R^2:", round(r23, 4))
+
+    mlflow.log_param("embedding", "all-mpnet-base-v2")
+    mlflow.log_param("neuronas", 192)
+    mlflow.log_param("dropout", 0.4)
+
+    mlflow.log_metric("MAE", mae3)
+    mlflow.log_metric("RMSE", rmse3)
+    mlflow.log_metric("R2", r23)
