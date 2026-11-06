@@ -37,7 +37,7 @@ mlflow.set_experiment("Prediccion_rating_peliculas")
 #Modelo 1
 with mlflow.start_run(run_name="Ridge"):
 
-    modelo1=Ridge(alpha=1.0)
+    modelo1=Ridge(alpha=3.0)
 
     modelo1.fit(X_train_vectorizado, y_train)
     y_pred1=modelo1.predict(X_test_vectorizado)
@@ -50,7 +50,7 @@ with mlflow.start_run(run_name="Ridge"):
     print("rmse:", round(rmse, 4))
     print("R^2:", round(r2, 4))
 
-    mlflow.log_param("alpha", 1.0)
+    mlflow.log_param("alpha", 3.0)
     mlflow.log_param("vectorizador", "TF-IDF")
 
     mlflow.log_metric("MAE", mae)
@@ -83,7 +83,7 @@ with mlflow.start_run(run_name="SVR_lineal"):
 
 
 #Modelo 3, en el notebook ya esta descargado el archivo de embeddings porque es mas facil cargarlos así
-X_train_embedding = np.load("X_train_embedding.npy")
+
 X_test_embedding = np.load("X_test_embedding.npy")
 
 modelo3_red = load_model("modelo_rating_bert.keras")
