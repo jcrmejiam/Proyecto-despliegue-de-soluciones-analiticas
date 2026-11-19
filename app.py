@@ -1,6 +1,7 @@
 
 import streamlit as st
 import requests
+import os
 
 st.set_page_config(page_title="Evaluación de historias", layout="wide")
 
@@ -30,7 +31,7 @@ if predecir:
     else:
         try:
             respuesta = requests.post(
-                "http://127.0.0.1:8000/api/predecir",
+                os.getenv("API_URL", "http://127.0.0.1:8000/api/predecir"),
                 json={"trama": trama},
                 timeout=60
             )
