@@ -1,29 +1,6 @@
+
 import streamlit as st
-import joblib
-import pandas as pd
-from sentence_transformers import SentenceTransformer
-from tensorflow.keras.models import load_model
-
-
-@st.cache_resource
-def cargar_modelo_generos():
-    modelo1 = joblib.load("modelo_generos.pkl")
-    vector = joblib.load("vector_generos.pkl")
-    mlb = joblib.load("etiquetas_generos.pkl")
-    return modelo1, vector, mlb
-
-modelo1, vector, mlb = cargar_modelo_generos()
-
-
-@st.cache_resource
-def cargar_modelo_rating():
-    embedding = SentenceTransformer('all-mpnet-base-v2')
-    modelo3_red = load_model("modelo_rating_bert.keras", compile=False)
-    return embedding, modelo3_red
-
-embedding, modelo3_red = cargar_modelo_rating()
-
-
+import requests
 
 st.set_page_config(page_title="Evaluación de historias", layout="wide")
 
@@ -43,36 +20,52 @@ with col1:
 
         predecir = st.button("Ver resultado")
 
+#Consultar la API
+resultado = None
+error = None
+
+if predecir:
+    if trama.strip() == "":
+        st.warning("Por favor, ingresa la trama de la película.")
+    else:
+        try:
+            respuesta = requests.post(
+                "http://127.0.0.1:8000/api/predecir",
+                json={"trama": trama},
+                timeout=60
+            )
+            respuesta.raise_for_status()
+            resultado = respuesta.json()
+
+            if "error" in resultado:
+                error = resultado["error"]
+                resultado = None
+
+        except requests.RequestException:
+            error = "No se pudo conectar con la API."
+
 with col2:
     with st.container(border=True):
         st.subheader("Resultado")
 
         st.write("**Valoración estimada**")
 
-        if predecir and trama.strip():
-            trama_embedding = embedding.encode([trama])
-            rating = modelo3_red.predict(trama_embedding, verbose=0)
-            st.write(f"{float(rating[0][0]):.2f} / 10")
+        if resultado:
+            st.write(f"{resultado['rating']:.2f} / 10")
         else:
             st.write("Pendiente de predicción")
 
         st.write("**Géneros sugeridos**")
 
-        if predecir and trama.strip():
-            trama_vectorizada = vector.transform([trama])
-            probabilidades = modelo1.predict_proba(trama_vectorizada)[0]
+        if resultado:
+            for genero in resultado["generos"]:
+                nombre = genero["genero"]
+                probabilidad = genero["probabilidad"]
 
-            resultados = pd.DataFrame({"Genero": mlb.classes_, "Probabilidad": probabilidades})
-
-            resultados = resultados.sort_values(by="Probabilidad", ascending=False)
-
-            for _, fila in resultados.head(3).iterrows():
-                st.write(f"{fila['Genero']}: {fila['Probabilidad']:.0%}")
-                st.progress(float(fila["Probabilidad"]))
+                st.write(f"{nombre}: {probabilidad:.0%}")
+                st.progress(float(probabilidad))
         else:
-            st.write("Pendiente predicción")
-
-
+            st.write("Pendiente de predicción")
 
         st.caption(
             "Las etiquetas pueden coexistir; sus probabilidades "
@@ -81,8 +74,6 @@ with col2:
 
         st.divider()
         st.caption("Apoyo para evaluar historias.")
-if predecir:
-    if trama.strip() == "":
-        st.warning("Por favor, ingresa la trama de la película.")
-    else:
-        st.info("La trama está lista. Falta conectar los modelos de predicción.")
+
+if error:
+    st.error(error)
