@@ -1,0 +1,27 @@
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "127.0.0.1:8001:8000"
+    volumes:
+      - ./modelo_rating_ridge.pkl:/app/modelo_rating_ridge.pkl:ro
+      - ./vector_rating.pkl:/app/vector_rating.pkl:ro
+      - ./modelo_generos.pkl:/app/modelo_generos.pkl:ro
+      - ./vector_generos.pkl:/app/vector_generos.pkl:ro
+      - ./etiquetas_generos.pkl:/app/etiquetas_generos.pkl:ro
+    restart: unless-stopped
+
+  tablero:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    ports:
+      - "8502:8501"
+    environment:
+      API_URL: http://api:8000/api/predecir
+    depends_on:
+      - api
+    restart: unless-stopped
